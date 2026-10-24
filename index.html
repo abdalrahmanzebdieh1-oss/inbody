@@ -5,10 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#007A78">
   <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>عيادتي الذكية | فحص مكونات الجسم</title>
+
+  <!-- ربط ملفات تثبيت التطبيق (PWA) -->
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3004/3004458.png">
+
+  <!-- الخطوط والتنسيقات -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+
   <style>
     :root {
       --primary: #007A78;
@@ -40,9 +49,9 @@
       background: var(--primary); color: white; border: none; border-radius: 12px;
       padding: 14px; font-size: 1rem; font-weight: 700; display: flex;
       justify-content: center; align-items: center; gap: 8px; cursor: pointer;
-      box-shadow: 0 4px 12px rgba(0,122,120,0.3); transition: 0.2s;
+      box-shadow: 0 4px 12px rgba(0,122,120,0.3); transition: 0.2s; width: 100%;
     }
-    .btn-scan:disabled { background: #94A3B8; box-shadow: none; }
+    .btn-scan:disabled { background: #94A3B8; box-shadow: none; cursor: not-allowed; }
 
     #status-msg { font-size: 0.85rem; text-align: center; color: #64748B; min-height: 20px; }
 
@@ -65,7 +74,7 @@
       <p>فحص وتحليل مكونات الجسم عبر البلوتوث</p>
     </header>
 
-    <!-- بطاقة البيانات الشخصية -->
+    <!-- مدخلات البيانات الشخصية -->
     <div class="card">
       <div class="form-grid">
         <div class="form-group">
@@ -73,7 +82,7 @@
           <input type="number" id="height" value="165">
         </div>
         <div class="form-group">
-          <label>العمر (سنة)</label>
+<label>العمر (سنة)</label>
           <input type="number" id="age" value="30">
         </div>
         <div class="form-group full">
@@ -86,12 +95,13 @@
       </div>
     </div>
 
-    <!-- زر الاتصال والمؤشرات -->
+    <!-- زر الاتصال بالميزان -->
     <button class="btn-scan" id="scan-btn" onclick="connectScale()">
       <span>بدء الفحص والاتصال بالميزان</span>
     </button>
     <div id="status-msg">تأكد من تفعيل البلوتوث والموقع ثم قف على الميزان</div>
-<!-- لوحة عرض النتائج -->
+
+    <!-- لوحة النتائج -->
     <div class="card" id="results-card" style="display: none;">
       <div class="results-grid">
         <div class="result-box highlight">
@@ -127,41 +137,29 @@
   </div>
 
   <script>
+    // تفعيل Service Worker للسماح بتثبيت التطبيق على الهاتف
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(() => console.log('Service Worker Registered'))
+          .catch((err) => console.log('SW registration failed: ', err));
+      });
+    }
+
     const statusMsg = document.getElementById('status-msg');
     const scanBtn = document.getElementById('scan-btn');
     const resultsCard = document.getElementById('results-card');
 
     async function connectScale() {
       if (!navigator.bluetooth) {
-        alert("متصفحك لا يدعم تقنية Web Bluetooth. يرجى استخدام متصفح Google Chrome على هاتف أندرويد.");
+        alert("المتصفح لا يدعم Web Bluetooth. يرجى استخدام Google Chrome على أندرويد.");
         return;
       }
 
       try {
         scanBtn.disabled = true;
-        statusMsg.innerText = "يرجى اختيار الميزان من القائمة والوقوف عليه...";
+        statusMsg.innerText = "يرجى اختيار الميزان والوقوف عليه...";
 
-        // طلب البحث عن أجهزة البلوتوث القريبة
         const device = await navigator.bluetooth.requestDevice({
           acceptAllDevices: true,
-          optionalServices: [
-            'weight_scale',
-            0xfff0,
-            0xffe0,
-            0xfee7,
-            '0000fff0-0000-1000-8000-00805f9b34fb',
-            '0000ffe0-0000-1000-8000-00805f9b34fb'
-          ]
-        });
-
-        statusMsg.innerText = "تم العثور على الميزان، جاري قراءة البيانات...";
-        const server = await device.gatt.connect();
-
-        // فحص الخدمات المتاحة داخل الميزان
-        const services = await server.getPrimaryServices();
-        let subscribed = false;
-
-        for (const service of services) {
-          const chars = await service.getCharacteristics();
-          for (const char of chars) {
-            if (char.properties.
+          optionalServ

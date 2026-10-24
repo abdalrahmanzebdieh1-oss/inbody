@@ -1,0 +1,16 @@
+
+  "name": "عيادتي الذكية",
+  "short_name": "عيادتي",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#007A78",
+  "theme_color": "#007A78",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3004/3004458.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
