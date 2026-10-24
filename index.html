@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#007A78">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>عيادتي الذكية | فحص مكونات الجسم</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #007A78;
+      --primary-light: #E0F2F1;
+      --text-main: #1F2937;
+      --bg-page: #F8FAFC;
+      --card-bg: #FFFFFF;
+    }
+    * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; }
+    body { background-color: var(--bg-page); color: var(--text-main); padding: 16px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 480px; display: flex; flex-direction: column; gap: 14px; }
+    
+    header { text-align: center; padding: 12px 0; }
+    header h1 { font-size: 1.3rem; color: var(--primary); font-weight: 700; }
+    header p { font-size: 0.85rem; color: #64748B; }
+
+    .card { background: var(--card-bg); border-radius: 16px; padding: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+    
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .form-group { display: flex; flex-direction: column; gap: 4px; }
+    .form-group.full { grid-column: span 2; }
+    label { font-size: 0.8rem; font-weight: 600; color: #475569; }
+    input, select {
+      padding: 10px; border-radius: 10px; border: 1.5px solid #CBD5E1; font-size: 0.95rem; outline: none; transition: 0.2s;
+    }
+    input:focus, select:focus { border-color: var(--primary); }
+
+    .btn-scan {
+      background: var(--primary); color: white; border: none; border-radius: 12px;
+      padding: 14px; font-size: 1rem; font-weight: 700; display: flex;
+      justify-content: center; align-items: center; gap: 8px; cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,122,120,0.3); transition: 0.2s;
+    }
+    .btn-scan:disabled { background: #94A3B8; box-shadow: none; }
+
+    #status-msg { font-size: 0.85rem; text-align: center; color: #64748B; min-height: 20px; }
+
+    .results-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .result-box {
+      background: #F1F5F9; border-radius: 12px; padding: 12px;
+      display: flex; flex-direction: column; gap: 4px; border-right: 4px solid var(--primary);
+    }
+    .result-box.highlight { grid-column: span 2; background: var(--primary-light); border-right-color: var(--primary); }
+    .result-title { font-size: 0.75rem; color: #64748B; font-weight: 600; }
+    .result-val { font-size: 1.25rem; font-weight: 700; color: var(--primary); }
+    .result-unit { font-size: 0.75rem; color: #475569; font-weight: 400; margin-right: 3px; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>عيادتي الذكية</h1>
+      <p>فحص وتحليل مكونات الجسم عبر البلوتوث</p>
+    </header>
+
+    <!-- بطاقة البيانات الشخصية -->
+    <div class="card">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>الطول (سم)</label>
+          <input type="number" id="height" value="165">
+        </div>
+        <div class="form-group">
+          <label>العمر (سنة)</label>
+          <input type="number" id="age" value="30">
+        </div>
+        <div class="form-group full">
+          <label>الجنس</label>
+          <select id="gender">
+            <option value="female">أنثى</option>
+            <option value="male">ذكر</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- زر الاتصال والمؤشرات -->
+    <button class="btn-scan" id="scan-btn" onclick="connectScale()">
+      <span>بدء الفحص والاتصال بالميزان</span>
+    </button>
+    <div id="status-msg">تأكد من تفعيل البلوتوث والموقع ثم قف على الميزان</div>
+<!-- لوحة عرض النتائج -->
+    <div class="card" id="results-card" style="display: none;">
+      <div class="results-grid">
+        <div class="result-box highlight">
+          <div class="result-title">الوزن الكلي</div>
+          <div class="result-val"><span id="res-weight">0.0</span><span class="result-unit">كغ</span></div>
+        </div>
+        <div class="result-box">
+          <div class="result-title">نسبة الدهون</div>
+          <div class="result-val"><span id="res-fat">0.0</span><span class="result-unit">%</span></div>
+        </div>
+        <div class="result-box">
+          <div class="result-title">كتلة العضلات</div>
+          <div class="result-val"><span id="res-muscle">0.0</span><span class="result-unit">كغ</span></div>
+        </div>
+        <div class="result-box">
+          <div class="result-title">مؤشر الكتلة (BMI)</div>
+          <div class="result-val"><span id="res-bmi">0.0</span></div>
+        </div>
+        <div class="result-box">
+          <div class="result-title">نسبة الماء</div>
+          <div class="result-val"><span id="res-water">0.0</span><span class="result-unit">%</span></div>
+        </div>
+        <div class="result-box">
+          <div class="result-title">الدهون الحشوية</div>
+          <div class="result-val"><span id="res-visceral">0</span><span class="result-unit">مستوى</span></div>
+        </div>
+        <div class="result-box">
+          <div class="result-title">الأيض الأساسي (BMR)</div>
+          <div class="result-val"><span id="res-bmr">0</span><span class="result-unit">سعرة</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const statusMsg = document.getElementById('status-msg');
+    const scanBtn = document.getElementById('scan-btn');
+    const resultsCard = document.getElementById('results-card');
+
+    async function connectScale() {
+      if (!navigator.bluetooth) {
+        alert("متصفحك لا يدعم تقنية Web Bluetooth. يرجى استخدام متصفح Google Chrome على هاتف أندرويد.");
+        return;
+      }
+
+      try {
+        scanBtn.disabled = true;
+        statusMsg.innerText = "يرجى اختيار الميزان من القائمة والوقوف عليه...";
+
+        // طلب البحث عن أجهزة البلوتوث القريبة
+        const device = await navigator.bluetooth.requestDevice({
+          acceptAllDevices: true,
+          optionalServices: [
+            'weight_scale',
+            0xfff0,
+            0xffe0,
+            0xfee7,
+            '0000fff0-0000-1000-8000-00805f9b34fb',
+            '0000ffe0-0000-1000-8000-00805f9b34fb'
+          ]
+        });
+
+        statusMsg.innerText = "تم العثور على الميزان، جاري قراءة البيانات...";
+        const server = await device.gatt.connect();
+
+        // فحص الخدمات المتاحة داخل الميزان
+        const services = await server.getPrimaryServices();
+        let subscribed = false;
+
+        for (const service of services) {
+          const chars = await service.getCharacteristics();
+          for (const char of chars) {
+            if (char.properties.
